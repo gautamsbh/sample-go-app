@@ -1,5 +1,7 @@
 package user
 
+import "sync"
+
 type User struct {
 	ID          int    `json:"id"`
 	Name        string `json:"name"`
@@ -8,5 +10,11 @@ type User struct {
 }
 
 type (
-	UsersStorage map[int]User
+	dataMap map[int]User
 )
+
+// DataStore is to store user information and support concurrency
+type dataStore struct {
+	store dataMap
+	mtx   *sync.RWMutex
+}
