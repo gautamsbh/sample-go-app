@@ -23,7 +23,7 @@ func main() {
 
 	var (
 		userService = user.NewService()
-		userRouter  = user.NewHandler(userService)
+		userHandler = user.NewHandler(userService)
 		server      = &http.Server{
 			Addr:    addr,
 			Handler: nil,
@@ -31,8 +31,8 @@ func main() {
 	)
 
 	// register routes
-	http.HandleFunc("/users", userRouter.Route)
-	http.HandleFunc("/users/", userRouter.Route)
+	http.Handle("/users", userHandler)
+	http.Handle("/users/", userHandler)
 
 	// start http server
 	go func() {

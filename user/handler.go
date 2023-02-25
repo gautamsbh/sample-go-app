@@ -16,7 +16,7 @@ type handler struct {
 
 // Handler user request handler
 type Handler interface {
-	Route(w http.ResponseWriter, req *http.Request)
+	ServeHTTP(w http.ResponseWriter, req *http.Request)
 }
 
 // createUser create user handler parse the request
@@ -40,13 +40,13 @@ func (h handler) createUser(ctx context.Context, req *http.Request) shared.Respo
 	out, err := h.service.CreateUser(ctx, req, user)
 	if err != nil {
 		return shared.Response{
-			Code:    http.StatusBadRequest,
+			Code:    http.StatusUnprocessableEntity,
 			Message: err.Error(),
 		}
 	}
 
 	return shared.Response{
-		Code: 200,
+		Code: http.StatusOK,
 		Data: out,
 	}
 }
@@ -55,7 +55,7 @@ func (h handler) createUser(ctx context.Context, req *http.Request) shared.Respo
 func (h handler) getUsers(ctx context.Context, req *http.Request) shared.Response {
 	out := h.service.GetUsers(ctx, req)
 	return shared.Response{
-		Code: 200,
+		Code: http.StatusOK,
 		Data: out,
 	}
 }
@@ -65,13 +65,13 @@ func (h handler) getUser(ctx context.Context, req *http.Request, userID int) sha
 	out, err := h.service.GetUser(ctx, req, userID)
 	if err != nil {
 		return shared.Response{
-			Code:    422,
+			Code:    http.StatusUnprocessableEntity,
 			Message: err.Error(),
 		}
 	}
 
 	return shared.Response{
-		Code: 200,
+		Code: http.StatusOK,
 		Data: out,
 	}
 }
@@ -93,13 +93,13 @@ func (h handler) updateUser(ctx context.Context, req *http.Request, userID int) 
 	out, err := h.service.UpdateUser(ctx, req, user, userID)
 	if err != nil {
 		return shared.Response{
-			Code:    422,
+			Code:    http.StatusUnprocessableEntity,
 			Message: err.Error(),
 		}
 	}
 
 	return shared.Response{
-		Code: 200,
+		Code: http.StatusOK,
 		Data: out,
 	}
 }
@@ -108,22 +108,13 @@ func (h handler) updateUser(ctx context.Context, req *http.Request, userID int) 
 func (h handler) deleteUser(ctx context.Context, req *http.Request, userID int) shared.Response {
 	out := h.service.DeleteUser(ctx, req, userID)
 	return shared.Response{
-		Code: 200,
+		Code: http.StatusOK,
 		Data: out,
 	}
 }
 
-// NewHandler initialises the user handler
-//
-// Implements all the methods
-func NewHandler(service Service) Handler {
-	return &handler{
-		service: service,
-	}
-}
-
 // Route method acts as a router for users endpoint
-func (h handler) Route(w http.ResponseWriter, req *http.Request) {
+func (h *handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	var (
 		ctx   = req.Context()
 		paths = strings.Split(strings.Trim(req.URL.Path, "/"), "/")
@@ -174,6 +165,13 @@ func (h handler) Route(w http.ResponseWriter, req *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(out.Code)
 	_, _ = w.Write(respBody)
+}
 
-	return
+// NewHandler initialises the user handler
+//
+// Implements all the methods
+func NewHandler(service Service) Handler {
+	return &handler{
+		service: service,
+	}
 }
