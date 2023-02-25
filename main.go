@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gautamsbh/sample-go-app/config"
+	"github.com/gautamsbh/sample-go-app/shared"
 	"github.com/gautamsbh/sample-go-app/user"
 )
 
@@ -22,17 +23,20 @@ func main() {
 	)
 
 	var (
-		userService = user.NewService()
-		userHandler = user.NewHandler(userService)
-		server      = &http.Server{
+		genericRouter = shared.NewGenericRouter()
+		userService   = user.NewService()
+		userHandler   = user.NewHandler(userService)
+		server        = &http.Server{
 			Addr:    addr,
 			Handler: nil,
 		}
 	)
 
-	// register routes
-	http.Handle("/users", userHandler)
-	http.Handle("/users/", userHandler)
+	// register routes in generic router
+	userHandler.RegisterRoutes(genericRouter)
+
+	// direct all request to generic router
+	http.Handle("/", genericRouter)
 
 	// start http server
 	go func() {
